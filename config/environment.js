@@ -1,7 +1,7 @@
 /* jshint node: true */
 
-module.exports = function(environment) {
-  var ENV = {
+module.exports = function (environment) {
+  let ENV = {
     modulePrefix: 'red-green-client',
     environment: environment,
     baseURL: '/',
@@ -26,7 +26,7 @@ module.exports = function(environment) {
     // ENV.APP.LOG_TRANSITIONS = true;
     // ENV.APP.LOG_TRANSITIONS_INTERNAL = true;
     // ENV.APP.LOG_VIEW_LOOKUPS = true;
-    ENV.serverURL = 'http://localhost:3000'
+    ENV.serverURL = 'http://localhost:3000';
   }
 
   if (environment === 'test') {
@@ -46,6 +46,7 @@ module.exports = function(environment) {
   }
 
   ENV.apiBaseURL = ENV.serverURL + '/' + ENV.apiNamespace;
+
   ENV['ember-simple-auth'] = {
     routeAfterAuthentication: 'dashboard',
     routeIfAlreadyAuthenticated: 'dashboard'

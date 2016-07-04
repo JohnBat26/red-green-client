@@ -9,11 +9,30 @@
 define('red-green-client/adapters/application', ['exports', 'ember', 'ember-data', 'ember-simple-auth/mixins/data-adapter-mixin', 'red-green-client/config/environment'], function (exports, _ember, _emberData, _emberSimpleAuthMixinsDataAdapterMixin, _redGreenClientConfigEnvironment) {
   exports['default'] = _emberData['default'].JSONAPIAdapter.extend(_emberSimpleAuthMixinsDataAdapterMixin['default'], {
     authorizer: 'authorizer:application',
+    namespace: _redGreenClientConfigEnvironment['default'].apiNamespace,
     host: _redGreenClientConfigEnvironment['default'].serverURL,
-    namespace: _redGreenClientConfigEnvironment['default'].apiNameSpace, //optional (for namespaced APIs)
+
     pathForType: function pathForType(type) {
       var underscored = _ember['default'].String.underscore(type);
       return _ember['default'].String.pluralize(underscored);
+    },
+
+    // this is a fix for when a device sleeps for longer than token lasts
+    // (ESA bug https://github.com/simplabs/ember-simple-auth/issues/831)
+    ajax: function ajax() {
+      var _this = this,
+          _arguments = arguments;
+
+      var session = this.get('session');
+
+      if (new Date().getTime() > session.get('data.authenticated.expires_at')) {
+        var authenticator = this.container.lookup(session.get('data.authenticated.authenticator'));
+        return authenticator._refreshAccessToken().then(function () {
+          return _this._super.apply(_this, _arguments);
+        });
+      } else {
+        return this._super.apply(this, arguments);
+      }
     }
   });
 });
@@ -461,7 +480,7 @@ define('red-green-client/instance-initializers/ember-simple-auth', ['exports', '
     }
   };
 });
-define('red-green-client/models/balance-change', ['exports', 'ember-data', 'ember'], function (exports, _emberData, _ember) {
+define('red-green-client/models/balance-change', ['exports', 'ember-data'], function (exports, _emberData) {
   exports['default'] = _emberData['default'].Model.extend({
     changeType: _emberData['default'].attr('string'),
     entryDate: _emberData['default'].attr('string'),
@@ -495,8 +514,28 @@ define('red-green-client/router', ['exports', 'ember', 'red-green-client/config/
 
   exports['default'] = Router;
 });
-define('red-green-client/routes/application', ['exports', 'ember', 'ember-simple-auth/mixins/application-route-mixin', 'red-green-client/config/environment'], function (exports, _ember, _emberSimpleAuthMixinsApplicationRouteMixin, _redGreenClientConfigEnvironment) {
-  exports['default'] = _ember['default'].Route.extend(_emberSimpleAuthMixinsApplicationRouteMixin['default'], {});
+define('red-green-client/routes/application', ['exports', 'ember', 'ember-simple-auth/mixins/application-route-mixin'], function (exports, _ember, _emberSimpleAuthMixinsApplicationRouteMixin) {
+  exports['default'] = _ember['default'].Route.extend(_emberSimpleAuthMixinsApplicationRouteMixin['default'], {
+    session: _ember['default'].inject.service(),
+    sessionAuthenticated: function sessionAuthenticated() {
+      this._super.apply(this, arguments); // for keeping the defaults
+      //(attempted transition, routeAfterAuth config etc..)
+      this.loadUser();
+    },
+    loadUser: function loadUser() {
+      var _this = this;
+
+      if (!this.get('session.isAuthenticated')) {
+        return;
+      }
+      this.store.findRecord('user', 'me').then(function (user) {
+        _this.set('session.currentUser', user);
+      });
+    },
+    beforeModel: function beforeModel() {
+      this.loadUser();
+    }
+  });
 });
 define('red-green-client/routes/dashboard/expenses/index', ['exports', 'ember'], function (exports, _ember) {
   exports['default'] = _ember['default'].Route.extend({});
@@ -1535,7 +1574,7 @@ catch(err) {
 /* jshint ignore:start */
 
 if (!runningTests) {
-  require("red-green-client/app")["default"].create({"name":"red-green-client","version":"0.0.0+85a9311e"});
+  require("red-green-client/app")["default"].create({"name":"red-green-client","version":"0.0.0+14502ccf"});
 }
 
 /* jshint ignore:end */

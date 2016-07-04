@@ -179,7 +179,7 @@ define('red-green-client/tests/models/balance-change.jshint', ['exports'], funct
   QUnit.module('JSHint | models/balance-change.js');
   QUnit.test('should pass jshint', function (assert) {
     assert.expect(1);
-    assert.ok(false, 'models/balance-change.js should pass jshint.\nmodels/balance-change.js: line 2, col 8, \'Ember\' is defined but never used.\n\n1 error');
+    assert.ok(true, 'models/balance-change.js should pass jshint.');
   });
 });
 define('red-green-client/tests/models/user.jshint', ['exports'], function (exports) {
@@ -215,7 +215,7 @@ define('red-green-client/tests/routes/application.jshint', ['exports'], function
   QUnit.module('JSHint | routes/application.js');
   QUnit.test('should pass jshint', function (assert) {
     assert.expect(1);
-    assert.ok(false, 'routes/application.js should pass jshint.\nroutes/application.js: line 3, col 8, \'ENV\' is defined but never used.\n\n1 error');
+    assert.ok(true, 'routes/application.js should pass jshint.');
   });
 });
 define('red-green-client/tests/routes/dashboard/expenses/index.jshint', ['exports'], function (exports) {
